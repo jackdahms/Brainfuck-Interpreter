@@ -90,6 +90,7 @@ public class BrainfuckInterpreter extends JPanel {
 		sourceScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		layout.putConstraint(SpringLayout.NORTH, sourceScroll, 5, SpringLayout.SOUTH, sourceLabel);
 		layout.putConstraint(SpringLayout.WEST, sourceScroll, 0, SpringLayout.WEST, sourceLabel);
+		layout.putConstraint(SpringLayout.EAST, sourceScroll, -5, SpringLayout.EAST, this);
 		add(sourceScroll);
 		
 		outputLabel.setFont(new Font("courier", Font.PLAIN, 20));

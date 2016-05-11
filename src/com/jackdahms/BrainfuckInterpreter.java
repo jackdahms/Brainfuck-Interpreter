@@ -36,9 +36,9 @@ public class BrainfuckInterpreter extends Application {
 		grid.setAlignment(Pos.CENTER);
 		grid.setHgap(10);
 		grid.setVgap(5);
-		grid.setPadding(new Insets(5, 10, 5, 10));
+		grid.setPadding(new Insets(5, 10, 10, 10));
 		
-		grid.setGridLinesVisible(true);
+//		grid.setGridLinesVisible(true);
 		
 		Label inputLabel = new Label("INPUT");
 		GridPane.setHgrow(inputLabel, Priority.ALWAYS);
@@ -76,15 +76,13 @@ public class BrainfuckInterpreter extends Application {
 		
 		TextArea source = new TextArea();
 		source.setPrefHeight(10000); //just has to be big enough to reach the bottom of the stage
+		HBox.setHgrow(source, Priority.ALWAYS);
 		sourceControl.getChildren().add(source);
-//		grid.add(source, 0, 5, 2, 1);
 		
 		VBox controls = new VBox(10);
-		controls.getChildren().add(new Button("clear"));
+		controls.getChildren().add(new Button("example"));
 		sourceControl.getChildren().add(controls);
-//		grid.add(controls, 1, 5);
 		
-		GridPane.setHgrow(sourceControl, Priority.ALWAYS);
 		grid.add(sourceControl, 0, 5, 2, 1);
 
 		Scene scene = new Scene(grid, 1000, 600);

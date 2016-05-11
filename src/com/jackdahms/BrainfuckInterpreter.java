@@ -6,9 +6,14 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class BrainfuckInterpreter extends Application {
@@ -18,7 +23,7 @@ public class BrainfuckInterpreter extends Application {
 	}
 	
 	public void start(Stage stage) throws Exception {
-		stage.setTitle("JavaFX Welcome");
+		stage.setTitle("Brainfuck Interpreter");
         
 		GridPane grid = new GridPane();
 		grid.setAlignment(Pos.CENTER);
@@ -34,11 +39,7 @@ public class BrainfuckInterpreter extends Application {
 		
 		TextArea input = new TextArea();
 		input.setMaxHeight(40);
-		VBox vbInput = new VBox();
-		vbInput.setAlignment(Pos.TOP_CENTER);
-		vbInput.getChildren().add(input);
-		GridPane.setVgrow(vbInput, Priority.ALWAYS);
-		grid.add(vbInput, 0, 1);
+		grid.add(input, 0, 1);
 		
 		Label outputLabel = new Label("OUTPUT");
 		GridPane.setHgrow(outputLabel, Priority.ALWAYS);
@@ -46,11 +47,21 @@ public class BrainfuckInterpreter extends Application {
 		
 		TextArea output = new TextArea();
 		output.setMaxHeight(40);
-		VBox vbOutput = new VBox();
-		vbOutput.setAlignment(Pos.TOP_CENTER);
-		vbOutput.getChildren().add(output);
-		GridPane.setVgrow(vbOutput, Priority.ALWAYS);
-		grid.add(vbOutput, 1, 1);
+		grid.add(output, 1, 1);
+		
+		Label memoryLabel = new Label("MEMORY");
+		grid.add(memoryLabel, 0, 2);
+		
+		
+		HBox memory = new HBox(10);
+		TextField[] cells = new TextField[20];
+		for (int i = 0; i < cells.length; i++) {
+			cells[i] = new TextField("0");
+			cells[i].setFont(Font.font("monospace", 12));
+			memory.getChildren().add(cells[i]);
+		}
+		GridPane.setVgrow(memory, Priority.ALWAYS);
+		grid.add(memory, 0, 3, 2, 1);
 
 		Scene scene = new Scene(grid, 1000, 600);
 		try {

@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -18,6 +19,12 @@ import javafx.stage.Stage;
 
 public class BrainfuckInterpreter extends Application {
 
+	/**
+	 * TODO
+	 * input disselect/unfocus
+	 * on resize, update text boxes to remove scroll bars
+	 */
+	
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -31,7 +38,7 @@ public class BrainfuckInterpreter extends Application {
 		grid.setVgap(5);
 		grid.setPadding(new Insets(5, 10, 5, 10));
 		
-//		grid.setGridLinesVisible(true);
+		grid.setGridLinesVisible(true);
 		
 		Label inputLabel = new Label("INPUT");
 		GridPane.setHgrow(inputLabel, Priority.ALWAYS);
@@ -60,8 +67,25 @@ public class BrainfuckInterpreter extends Application {
 			cells[i].setFont(Font.font("monospace", 12));
 			memory.getChildren().add(cells[i]);
 		}
-		GridPane.setVgrow(memory, Priority.ALWAYS);
 		grid.add(memory, 0, 3, 2, 1);
+		
+		Label sourceLabel = new Label("SOURCE");
+		grid.add(sourceLabel, 0, 4);
+		
+		HBox sourceControl = new HBox(10);
+		
+		TextArea source = new TextArea();
+		source.setPrefHeight(10000); //just has to be big enough to reach the bottom of the stage
+		sourceControl.getChildren().add(source);
+//		grid.add(source, 0, 5, 2, 1);
+		
+		VBox controls = new VBox(10);
+		controls.getChildren().add(new Button("clear"));
+		sourceControl.getChildren().add(controls);
+//		grid.add(controls, 1, 5);
+		
+		GridPane.setHgrow(sourceControl, Priority.ALWAYS);
+		grid.add(sourceControl, 0, 5, 2, 1);
 
 		Scene scene = new Scene(grid, 1000, 600);
 		try {

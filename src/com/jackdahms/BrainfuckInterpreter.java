@@ -22,7 +22,7 @@ public class BrainfuckInterpreter extends Application {
 	/**
 	 * TODO
 	 * input disselect/unfocus
-	 * on resize, update text boxes to remove scroll bars
+	 * on resize, update text boxes to remove scroll bars (append and remove space on resize?)
 	 */
 	
 	public static void main(String[] args) {

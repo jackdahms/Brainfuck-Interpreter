@@ -10,14 +10,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class BrainfuckInterpreter extends Application {
 
@@ -26,7 +25,8 @@ public class BrainfuckInterpreter extends Application {
 	 * input disselect/unfocus
 	 * on resize, update text boxes to remove scroll bars (append and remove space on resize?)
 	 */
-		
+			
+	boolean running = true;
 	boolean started = false;
 	
 	public static void main(String[] args) {
@@ -36,19 +36,25 @@ public class BrainfuckInterpreter extends Application {
 	public void start(Stage stage) throws Exception {
 		createAndShowGUI(stage);
 		
-		while (true) {
-			while (started) {
-				step();
+		new Thread(() -> {
+			while (running) {
+				if (started) {
+					step();
+				}
 			}
-		}
+		}).start();
 	}	
 	
 	private void step() {
-		
+		System.out.println("step");
 	}
 	
 	private void createAndShowGUI(Stage stage) {
 		stage.setTitle("Brainfuck Interpreter");
+		stage.setOnCloseRequest((WindowEvent e) -> {
+			running = false;
+			stage.close();
+		});
         
 		GridPane grid = new GridPane();
 		grid.setAlignment(Pos.CENTER);

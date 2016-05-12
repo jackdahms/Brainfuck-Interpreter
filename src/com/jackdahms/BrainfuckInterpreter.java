@@ -1,6 +1,8 @@
 package com.jackdahms;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -24,12 +26,28 @@ public class BrainfuckInterpreter extends Application {
 	 * input disselect/unfocus
 	 * on resize, update text boxes to remove scroll bars (append and remove space on resize?)
 	 */
+		
+	boolean started = false;
 	
 	public static void main(String[] args) {
 		launch(args);
 	}
 	
 	public void start(Stage stage) throws Exception {
+		createAndShowGUI(stage);
+		
+		while (true) {
+			while (started) {
+				step();
+			}
+		}
+	}	
+	
+	private void step() {
+		
+	}
+	
+	private void createAndShowGUI(Stage stage) {
 		stage.setTitle("Brainfuck Interpreter");
         
 		GridPane grid = new GridPane();
@@ -82,12 +100,40 @@ public class BrainfuckInterpreter extends Application {
 		VBox controls = new VBox(10);
 		
 		Button[] controlButtons = new Button[6];
+		
 		controlButtons[0] = new Button("START");
+		controlButtons[0].setOnAction((ActionEvent e) -> {
+			System.out.println("start");
+			started = true;
+		});
+		
 		controlButtons[1] = new Button("STOP");
+		controlButtons[1].setOnAction((ActionEvent e) -> {
+			System.out.println("stop");
+			started = false;
+		});
+		
 		controlButtons[2] = new Button("STEP");
+		controlButtons[2].setOnAction((ActionEvent e) -> {
+			System.out.println("step");
+			step();
+		});
+		
 		controlButtons[3] = new Button("RESET");
+		controlButtons[3].setOnAction((ActionEvent e) -> {
+			System.out.println("reset");
+		});
+		
 		controlButtons[4] = new Button("SAVE");
+		controlButtons[4].setOnAction((ActionEvent e) -> {
+			System.out.println("save");
+		});
+		
 		controlButtons[5] = new Button("LOAD");
+		controlButtons[5].setOnAction((ActionEvent e) -> {
+			System.out.println("load");
+		});
+		
 		for (int i = 0; i < controlButtons.length; i++) {
 			controlButtons[i].setMaxWidth(Double.MAX_VALUE);
 			controls.getChildren().add(controlButtons[i]);
@@ -105,6 +151,6 @@ public class BrainfuckInterpreter extends Application {
 		}
 		stage.setScene(scene);
         stage.show();
-	}	
+	}
 	
 }

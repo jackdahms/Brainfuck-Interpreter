@@ -80,7 +80,15 @@ public class BrainfuckInterpreter extends Application {
 		sourceControl.getChildren().add(source);
 		
 		VBox controls = new VBox(10);
-		controls.getChildren().add(new Button("example"));
+		
+		Button startButton = new Button("START");
+		Button stopButton = new Button("STOP");
+		Button stepButton = new Button("STEP");
+		Button resetButton = new Button("RESET");
+		Button saveButton = new Button("SAVE");
+		Button loadButton = new Button("LOAD");
+		
+		controls.getChildren().addAll(startButton, stopButton, stepButton, resetButton, saveButton, loadButton);
 		sourceControl.getChildren().add(controls);
 		
 		grid.add(sourceControl, 0, 5, 2, 1);

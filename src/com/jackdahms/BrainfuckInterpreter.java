@@ -81,14 +81,18 @@ public class BrainfuckInterpreter extends Application {
 		
 		VBox controls = new VBox(10);
 		
-		Button startButton = new Button("START");
-		Button stopButton = new Button("STOP");
-		Button stepButton = new Button("STEP");
-		Button resetButton = new Button("RESET");
-		Button saveButton = new Button("SAVE");
-		Button loadButton = new Button("LOAD");
+		Button[] controlButtons = new Button[6];
+		controlButtons[0] = new Button("START");
+		controlButtons[1] = new Button("STOP");
+		controlButtons[2] = new Button("STEP");
+		controlButtons[3] = new Button("RESET");
+		controlButtons[4] = new Button("SAVE");
+		controlButtons[5] = new Button("LOAD");
+		for (int i = 0; i < controlButtons.length; i++) {
+			controlButtons[i].setMaxWidth(Double.MAX_VALUE);
+			controls.getChildren().add(controlButtons[i]);
+		}
 		
-		controls.getChildren().addAll(startButton, stopButton, stepButton, resetButton, saveButton, loadButton);
 		sourceControl.getChildren().add(controls);
 		
 		grid.add(sourceControl, 0, 5, 2, 1);
@@ -101,7 +105,6 @@ public class BrainfuckInterpreter extends Application {
 		}
 		stage.setScene(scene);
         stage.show();
-	}
-	
+	}	
 	
 }

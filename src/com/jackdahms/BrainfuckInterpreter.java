@@ -49,6 +49,45 @@ public class BrainfuckInterpreter extends Application {
 		System.out.println("step");
 	}
 	
+	private void interpret() {
+		String brainfuck = "";
+		
+		Scanner input = new Scanner(System.in);
+		brainfuck = input.nextLine();
+		
+		char[] raw = brainfuck.toCharArray();
+		
+		char[] cells = new char[30000]; //typically 30,000 cells in array, according to brainfuck's wikipedia page
+		Stack<Integer> loops = new Stack<Integer>();
+		int index = 0;
+		
+		for (int i = 0; i < raw.length; i++) {
+			char c = raw[i];
+			
+			if (c == '+') cells[index]++;
+			else if (c == '-') cells[index]--;
+			else if (c == '>') index++;
+			else if (c == '<') index--;
+			else if (c == '[' && cells[index] > 0) loops.push(i);
+			else if (c == '[' && cells[index] == 0) {
+				int open = 1; //count number of open brackets
+				do { 
+					i++; 
+					if (raw[i] == '[') open++; //increment for every open bracket
+					else if (raw[i] == ']') open--; //decrement for every close bracket
+				} while(raw[i] != ']' || open > 0); 
+			} else if (c == ']' && !loops.isEmpty()) {
+				i = loops.pop() - 1; //must subtract one because the for loop will add one
+			} else if (c == '.') System.out.print(cells[index]);
+			else if (c == ',') cells[index] = input.next().charAt(0);
+		}
+		
+		System.out.println("\nMEMORY");
+		System.out.print("[");
+		for (int i = 0; i < cells.length - 1; i++) System.out.print((int) cells[i] + ", ");
+		System.out.print(cells[cells.length - 1] + "]");
+	}
+	
 	private void createAndShowGUI(Stage stage) {
 		stage.setTitle("Brainfuck Interpreter");
 		stage.setOnCloseRequest((WindowEvent e) -> {

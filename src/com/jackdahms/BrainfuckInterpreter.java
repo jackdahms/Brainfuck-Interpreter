@@ -1,5 +1,7 @@
 package com.jackdahms;
 
+import java.io.File;
+import java.util.Scanner;
 import java.util.Stack;
 
 import javafx.application.Application;
@@ -18,6 +20,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -27,6 +30,8 @@ public class BrainfuckInterpreter extends Application {
 	 * TODO
 	 * input disselect/unfocus
 	 * on resize, update text boxes to remove scroll bars (append and remove space on resize?)
+	 * need a monospaced font
+	 * output platform.runlater
 	 */
 			
 	boolean running = true; //is the thread running
@@ -102,8 +107,6 @@ public class BrainfuckInterpreter extends Application {
 		grid.setVgap(5);
 		grid.setPadding(new Insets(5, 10, 10, 10));
 		
-//		grid.setGridLinesVisible(true);
-		
 		Label inputLabel = new Label("INPUT");
 		GridPane.setHgrow(inputLabel, Priority.ALWAYS);
 		grid.add(inputLabel, 0, 0);
@@ -127,7 +130,6 @@ public class BrainfuckInterpreter extends Application {
 		cellDisplays = new TextField[20];
 		for (int i = 0; i < cellDisplays.length; i++) {
 			cellDisplays[i] = new TextField("0");
-			cellDisplays[i].setFont(Font.font("monospace", 12));
 			memory.getChildren().add(cellDisplays[i]);
 		}
 		grid.add(memory, 0, 3, 2, 1);
@@ -181,7 +183,16 @@ public class BrainfuckInterpreter extends Application {
 		
 		controlButtons[5] = new Button("LOAD");
 		controlButtons[5].setOnAction((ActionEvent e) -> {
-			System.out.println("load");
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle("Open Brainfuck Program");
+			fileChooser.setInitialDirectory(new File("src/com/jackdahms/bf"));
+			try {
+				Scanner load = new Scanner(fileChooser.showOpenDialog(stage));
+				load.useDelimiter("\\Z");
+				source.setText(load.next());
+			} catch (Exception e1) {
+				System.err.println("Could not load file!");
+			}
 		});
 		
 		for (int i = 0; i < controlButtons.length; i++) {

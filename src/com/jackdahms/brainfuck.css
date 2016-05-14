@@ -4,3 +4,11 @@
     -fx-text-fill: #333333;
     -fx-effect: dropshadow( gaussian , rgba(255,255,255,0.5) , 0,0,0,1 );
 }
+
+.text-field {
+	-fx-font-family: "Monospaced";
+}
+
+.text-area {
+	-fx-font-family: "Monospaced";
+}

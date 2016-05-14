@@ -7,7 +7,6 @@ import java.util.Stack;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -19,7 +18,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -28,10 +26,8 @@ public class BrainfuckInterpreter extends Application {
 
 	/**
 	 * TODO
-	 * input disselect/unfocus
 	 * on resize, update text boxes to remove scroll bars (append and remove space on resize?)
-	 * need a monospaced font
-	 * output platform.runlater
+	 * output platform.runlater (use a queue with delays?)
 	 */
 			
 	boolean running = true; //is the thread running
@@ -83,8 +79,11 @@ public class BrainfuckInterpreter extends Application {
 					else if (raw[rawIndex] == ']') open--; //decrement for every close bracket
 				} while(raw[rawIndex] != ']' || open > 0); 
 			} else if (c == ']' && !loops.isEmpty()) rawIndex = loops.pop() - 1; //must subtract one because the for loop will add one
-			else if (c == '.') Platform.runLater(() -> output.setText(output.getText() + cells[index]));
-			else if (c == ',') cells[index] = input[inputIndex++];
+			else if (c == '.') {
+				System.out.println(cells[index]);
+				Platform.runLater(() -> output.setText(output.getText() + cells[index]));
+			}
+			else if (c == ',') try {cells[index] = input[inputIndex++];} catch (Exception e) {/* do nothing */}
 			
 			if (index < 20) Platform.runLater(() -> cellDisplays[index].setText("" + (int)cells[index]));
 			
@@ -95,6 +94,8 @@ public class BrainfuckInterpreter extends Application {
 	}
 	
 	private void createAndShowGUI(Stage stage) {
+		int ioHeight = 42; //tall enough for two rows without a scrollbar
+		
 		stage.setTitle("Brainfuck Interpreter");
 		stage.setOnCloseRequest((WindowEvent e) -> {
 			running = false;
@@ -112,7 +113,7 @@ public class BrainfuckInterpreter extends Application {
 		grid.add(inputLabel, 0, 0);
 		
 		TextArea input = new TextArea();
-		input.setMaxHeight(40);
+		input.setMinHeight(ioHeight);
 		grid.add(input, 0, 1);
 		
 		Label outputLabel = new Label("OUTPUT");
@@ -120,7 +121,7 @@ public class BrainfuckInterpreter extends Application {
 		grid.add(outputLabel, 1, 0);
 		
 		output = new TextArea();
-		output.setMaxHeight(40);
+		output.setMinHeight(ioHeight);
 		grid.add(output, 1, 1);
 		
 		Label memoryLabel = new Label("MEMORY");
@@ -210,8 +211,10 @@ public class BrainfuckInterpreter extends Application {
 		} catch (Exception e) {
 			System.err.println("Could not load stylesheet...");
 		}
+		grid.requestFocus(); //takes focus away from input, must be down after grid is added to scene
 		stage.setScene(scene);
         stage.show();
+        
 	}
 	
 }

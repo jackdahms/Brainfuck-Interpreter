@@ -25,6 +25,11 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class BrainfuckInterpreter extends Application {
+	
+	/**
+	 * TODO
+	 * platform.runlater runnable memory not updating fast enough
+	 */
 			
 	boolean running = true; //is the thread running
 	boolean started = false; //is the interpreter running

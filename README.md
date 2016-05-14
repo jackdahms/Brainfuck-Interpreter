@@ -2,7 +2,7 @@
 Interprets brainfuck code and displays memory.
 
 ##Display
-Input - accepts any number of ASCII characters with values ranging from 0 to 255
+Input - accepts any number of ASCII characters with values ranging from 0 to 255 <br>
 Output - outputs the ASCII representation of the memory of each cell
 Memory - the integer values of the first twenty cells
 Source - where the actual brainfuck code goes

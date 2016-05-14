@@ -224,6 +224,7 @@ public class BrainfuckInterpreter extends Application {
 				Scanner load = new Scanner(fileChooser.showOpenDialog(stage));
 				load.useDelimiter("\\Z");
 				source.setText(load.next());
+				load.close();
 			} catch (Exception e1) {
 				System.err.println("Could not load file!");
 			}

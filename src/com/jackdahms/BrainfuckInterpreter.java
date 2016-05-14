@@ -1,6 +1,7 @@
 package com.jackdahms;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
@@ -25,13 +26,7 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class BrainfuckInterpreter extends Application {
-	
-	/**
-	 * TODO
-	 * save needs to save file
-	 * color buttons
-	 */
-				
+					
 	boolean running = true; //is the thread running
 	boolean started = false; //is the interpreter running
 	
@@ -212,7 +207,14 @@ public class BrainfuckInterpreter extends Application {
 			FileChooser fileChooser = new FileChooser();
 			fileChooser.setTitle("Save Brainfuck Program");
 			fileChooser.setInitialDirectory(new File("src/com/jackdahms/bf"));
-			fileChooser.showSaveDialog(stage);
+			File save = fileChooser.showSaveDialog(stage);
+			try {
+	            FileWriter fileWriter = fileWriter = new FileWriter(save);
+	            fileWriter.write(source.getText());
+	            fileWriter.close();
+	        } catch (Exception ex) {
+	        	System.err.println("Could not save file!");
+	        }
 		});
 		
 		controlButtons[5] = new Button("LOAD");
@@ -246,8 +248,6 @@ public class BrainfuckInterpreter extends Application {
 			controls.getChildren().add(controlButtons[order[i]]);
 		}
 		
-		
-		
 		sourceControl.getChildren().add(controls);
 		
 		grid.add(sourceControl, 0, 5, 2, 1);
@@ -261,7 +261,6 @@ public class BrainfuckInterpreter extends Application {
 		grid.requestFocus(); //takes focus away from input, must be down after grid is added to scene
 		stage.setScene(scene);
         stage.show();
-        
 	}
 	
 }

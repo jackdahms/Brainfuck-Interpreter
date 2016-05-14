@@ -1,6 +1,9 @@
 package com.jackdahms;
 
+import java.util.Stack;
+
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -26,8 +29,21 @@ public class BrainfuckInterpreter extends Application {
 	 * on resize, update text boxes to remove scroll bars (append and remove space on resize?)
 	 */
 			
-	boolean running = true;
-	boolean started = false;
+	boolean running = true; //is the thread running
+	boolean started = false; //is the interpreter running
+	
+	char[] raw; //the source as a char array
+	char[] input; //the input as a char array
+	char[] cells = new char[30000]; //the memory of brainfuck, standard size of 30,000 as per wikipedia
+	
+	Stack<Integer> loops = new Stack<Integer>(); //keeps track of open/close bracket pairs
+	
+	int rawIndex = 0; //the pointer for the source
+	int inputIndex = 0; //the pointer for the input
+	int index = 0; //the pointer for the memory cells
+	
+	TextField[] cellDisplays; //where the value of the first 20 cells will be displayed;
+	TextArea output; //where the output will be printed
 	
 	public static void main(String[] args) {
 		launch(args);
@@ -46,46 +62,31 @@ public class BrainfuckInterpreter extends Application {
 	}	
 	
 	private void step() {
-		System.out.println("step");
-	}
-	
-	private void interpret() {
-		String brainfuck = "";
-		
-		Scanner input = new Scanner(System.in);
-		brainfuck = input.nextLine();
-		
-		char[] raw = brainfuck.toCharArray();
-		
-		char[] cells = new char[30000]; //typically 30,000 cells in array, according to brainfuck's wikipedia page
-		Stack<Integer> loops = new Stack<Integer>();
-		int index = 0;
-		
-		for (int i = 0; i < raw.length; i++) {
-			char c = raw[i];
+		if (rawIndex < raw.length) { 
+			char c = raw[rawIndex];
 			
 			if (c == '+') cells[index]++;
 			else if (c == '-') cells[index]--;
 			else if (c == '>') index++;
 			else if (c == '<') index--;
-			else if (c == '[' && cells[index] > 0) loops.push(i);
+			else if (c == '[' && cells[index] > 0) loops.push(rawIndex);
 			else if (c == '[' && cells[index] == 0) {
 				int open = 1; //count number of open brackets
 				do { 
-					i++; 
-					if (raw[i] == '[') open++; //increment for every open bracket
-					else if (raw[i] == ']') open--; //decrement for every close bracket
-				} while(raw[i] != ']' || open > 0); 
-			} else if (c == ']' && !loops.isEmpty()) {
-				i = loops.pop() - 1; //must subtract one because the for loop will add one
-			} else if (c == '.') System.out.print(cells[index]);
-			else if (c == ',') cells[index] = input.next().charAt(0);
+					rawIndex++; 
+					if (raw[rawIndex] == '[') open++; //increment for every open bracket
+					else if (raw[rawIndex] == ']') open--; //decrement for every close bracket
+				} while(raw[rawIndex] != ']' || open > 0); 
+			} else if (c == ']' && !loops.isEmpty()) rawIndex = loops.pop() - 1; //must subtract one because the for loop will add one
+			else if (c == '.') Platform.runLater(() -> output.setText(output.getText() + cells[index]));
+			else if (c == ',') cells[index] = input[inputIndex++];
+			
+			if (index < 20) Platform.runLater(() -> cellDisplays[index].setText("" + (int)cells[index]));
+			
+			rawIndex++;
+		} else {
+			started = false;
 		}
-		
-		System.out.println("\nMEMORY");
-		System.out.print("[");
-		for (int i = 0; i < cells.length - 1; i++) System.out.print((int) cells[i] + ", ");
-		System.out.print(cells[cells.length - 1] + "]");
 	}
 	
 	private void createAndShowGUI(Stage stage) {
@@ -115,20 +116,19 @@ public class BrainfuckInterpreter extends Application {
 		GridPane.setHgrow(outputLabel, Priority.ALWAYS);
 		grid.add(outputLabel, 1, 0);
 		
-		TextArea output = new TextArea();
+		output = new TextArea();
 		output.setMaxHeight(40);
 		grid.add(output, 1, 1);
 		
 		Label memoryLabel = new Label("MEMORY");
 		grid.add(memoryLabel, 0, 2);
 		
-		
 		HBox memory = new HBox(10);
-		TextField[] cells = new TextField[20];
-		for (int i = 0; i < cells.length; i++) {
-			cells[i] = new TextField("0");
-			cells[i].setFont(Font.font("monospace", 12));
-			memory.getChildren().add(cells[i]);
+		cellDisplays = new TextField[20];
+		for (int i = 0; i < cellDisplays.length; i++) {
+			cellDisplays[i] = new TextField("0");
+			cellDisplays[i].setFont(Font.font("monospace", 12));
+			memory.getChildren().add(cellDisplays[i]);
 		}
 		grid.add(memory, 0, 3, 2, 1);
 		
@@ -148,25 +148,30 @@ public class BrainfuckInterpreter extends Application {
 		
 		controlButtons[0] = new Button("START");
 		controlButtons[0].setOnAction((ActionEvent e) -> {
-			System.out.println("start");
+			raw = source.getText().toCharArray();
+			this.input = input.getText().toCharArray();
+			for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
 			started = true;
 		});
 		
 		controlButtons[1] = new Button("STOP");
 		controlButtons[1].setOnAction((ActionEvent e) -> {
-			System.out.println("stop");
 			started = false;
 		});
 		
 		controlButtons[2] = new Button("STEP");
 		controlButtons[2].setOnAction((ActionEvent e) -> {
-			System.out.println("step");
 			step();
 		});
 		
 		controlButtons[3] = new Button("RESET");
 		controlButtons[3].setOnAction((ActionEvent e) -> {
-			System.out.println("reset");
+			rawIndex = 0;
+			inputIndex = 0;
+			index = 0;
+			for (int i = 0; i < cellDisplays.length; i++) cellDisplays[i].setText("0");
+			for (int i = 0; i < cells.length; i++) cells[i] = 0;
+			output.setText("");
 		});
 		
 		controlButtons[4] = new Button("SAVE");

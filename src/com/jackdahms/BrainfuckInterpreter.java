@@ -39,7 +39,9 @@ public class BrainfuckInterpreter extends Application {
 	char[] cells = new char[30000]; //the memory of brainfuck, standard size of 30,000 as per wikipedia
 	
 	Stack<Integer> loops = new Stack<Integer>(); //keeps track of open/close bracket pairs
-	LinkedList<String> out = new LinkedList<String>();
+	LinkedList<String> outputChanges = new LinkedList<String>();
+	LinkedList<Integer> memoryIndex = new LinkedList<Integer>(); 
+	LinkedList<String> memoryChanges = new LinkedList<String>();
 	
 	int rawIndex = 0; //the pointer for the source
 	int inputIndex = 0; //the pointer for the input
@@ -66,16 +68,15 @@ public class BrainfuckInterpreter extends Application {
 		new Thread(() -> {
 			while (running) {
 				try {
-					Thread.sleep(100); //need the delay because Platform.runLater is too slow
+					Thread.sleep(1); //keeps thread from hogging cpu
 					Platform.runLater(() -> {
 						try {
-							output.setText(output.getText() + out.remove());
-							for (int i = 0; i < cellDisplays.length; i++) {
-								
-							}
-						} catch (Exception e) {
-							//do nothing
-						}
+							cellDisplays[memoryIndex.remove()].setText(memoryChanges.remove());
+						} catch (Exception e) {/*do nothing*/}
+						//must use separate tries because one failing cannot affect the other
+						try {
+							output.setText(output.getText() + outputChanges.remove());
+						} catch (Exception e) {/*do nothing*/}
 					});
 				} catch (Exception e) {
 					//do nothing
@@ -101,10 +102,13 @@ public class BrainfuckInterpreter extends Application {
 					else if (raw[rawIndex] == ']') open--; //decrement for every close bracket
 				} while(raw[rawIndex] != ']' || open > 0); 
 			} else if (c == ']' && !loops.isEmpty()) rawIndex = loops.pop() - 1; //must subtract one because the for loop will add one
-			else if (c == '.') out.add("" + cells[index]);
+			else if (c == '.') outputChanges.add("" + cells[index]);
 			else if (c == ',') try {cells[index] = input[inputIndex++];} catch (Exception e) {/* do nothing */}
 			
-			if (index < 20) Platform.runLater(() -> cellDisplays[index].setText("" + (int)cells[index]));
+			if (index < 20) {
+				memoryIndex.add(index);
+				memoryChanges.add("" + (int)cells[index]);
+			}
 			
 			rawIndex++;
 		} else {

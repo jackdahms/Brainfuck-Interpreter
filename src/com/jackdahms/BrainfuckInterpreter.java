@@ -26,7 +26,7 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class BrainfuckInterpreter extends Application {
-					
+				
 	boolean running = true; //is the thread running
 	boolean started = false; //is the interpreter running
 	
@@ -209,7 +209,7 @@ public class BrainfuckInterpreter extends Application {
 			fileChooser.setInitialDirectory(new File("src/com/jackdahms/bf"));
 			File save = fileChooser.showSaveDialog(stage);
 			try {
-	            FileWriter fileWriter = fileWriter = new FileWriter(save);
+	            FileWriter fileWriter = new FileWriter(save);
 	            fileWriter.write(source.getText());
 	            fileWriter.close();
 	        } catch (Exception ex) {

@@ -3,7 +3,6 @@ package com.jackdahms;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Scanner;
 import java.util.Stack;
 

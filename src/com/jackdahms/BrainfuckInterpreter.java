@@ -1,6 +1,8 @@
 package com.jackdahms;
 
 import java.io.File;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -23,12 +25,6 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class BrainfuckInterpreter extends Application {
-
-	/**
-	 * TODO
-	 * on resize, update text boxes to remove scroll bars (append and remove space on resize?)
-	 * output platform.runlater (use a queue with delays?)
-	 */
 			
 	boolean running = true; //is the thread running
 	boolean started = false; //is the interpreter running
@@ -38,6 +34,7 @@ public class BrainfuckInterpreter extends Application {
 	char[] cells = new char[30000]; //the memory of brainfuck, standard size of 30,000 as per wikipedia
 	
 	Stack<Integer> loops = new Stack<Integer>(); //keeps track of open/close bracket pairs
+	LinkedList<String> out = new LinkedList<String>();
 	
 	int rawIndex = 0; //the pointer for the source
 	int inputIndex = 0; //the pointer for the input
@@ -60,6 +57,26 @@ public class BrainfuckInterpreter extends Application {
 				}
 			}
 		}).start();
+		
+		new Thread(() -> {
+			while (running) {
+				try {
+					Thread.sleep(100); //need the delay because Platform.runLater is too slow
+					Platform.runLater(() -> {
+						try {
+							output.setText(output.getText() + out.remove());
+							for (int i = 0; i < cellDisplays.length; i++) {
+								
+							}
+						} catch (Exception e) {
+							//do nothing
+						}
+					});
+				} catch (Exception e) {
+					//do nothing
+				}
+			}
+		}).start();
 	}	
 	
 	private void step() {
@@ -79,10 +96,7 @@ public class BrainfuckInterpreter extends Application {
 					else if (raw[rawIndex] == ']') open--; //decrement for every close bracket
 				} while(raw[rawIndex] != ']' || open > 0); 
 			} else if (c == ']' && !loops.isEmpty()) rawIndex = loops.pop() - 1; //must subtract one because the for loop will add one
-			else if (c == '.') {
-				System.out.println(cells[index]);
-				Platform.runLater(() -> output.setText(output.getText() + cells[index]));
-			}
+			else if (c == '.') out.add("" + cells[index]);
 			else if (c == ',') try {cells[index] = input[inputIndex++];} catch (Exception e) {/* do nothing */}
 			
 			if (index < 20) Platform.runLater(() -> cellDisplays[index].setText("" + (int)cells[index]));
@@ -179,7 +193,10 @@ public class BrainfuckInterpreter extends Application {
 		
 		controlButtons[4] = new Button("SAVE");
 		controlButtons[4].setOnAction((ActionEvent e) -> {
-			System.out.println("save");
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle("Save Brainfuck Program");
+			fileChooser.setInitialDirectory(new File("src/com/jackdahms/bf"));
+			fileChooser.showSaveDialog(stage);
 		});
 		
 		controlButtons[5] = new Button("LOAD");

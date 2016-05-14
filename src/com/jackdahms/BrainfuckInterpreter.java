@@ -28,9 +28,10 @@ public class BrainfuckInterpreter extends Application {
 	
 	/**
 	 * TODO
-	 * platform.runlater runnable memory not updating fast enough
+	 * save needs to save file
+	 * color buttons
 	 */
-			
+				
 	boolean running = true; //is the thread running
 	boolean started = false; //is the interpreter running
 	
@@ -39,11 +40,11 @@ public class BrainfuckInterpreter extends Application {
 	char[] cells = new char[30000]; //the memory of brainfuck, standard size of 30,000 as per wikipedia
 	
 	Stack<Integer> loops = new Stack<Integer>(); //keeps track of open/close bracket pairs
-	LinkedList<String> outputChanges = new LinkedList<String>();
-	LinkedList<Integer> memoryIndex = new LinkedList<Integer>(); 
-	LinkedList<String> memoryChanges = new LinkedList<String>();
+	LinkedList<String> outputChanges = new LinkedList<String>(); //queue of output
+	LinkedList<Integer> memoryIndex = new LinkedList<Integer>(); //queue of displayed memory indices to be updated
+	LinkedList<String> memoryChanges = new LinkedList<String>(); //queue of updates to displayed memory
 	
-	int rawIndex = 0; //the pointer for the source
+	int rawIndex = -1; //the pointer for the source, starts at -1 because it increments before every step
 	int inputIndex = 0; //the pointer for the input
 	int index = 0; //the pointer for the memory cells
 	
@@ -57,6 +58,7 @@ public class BrainfuckInterpreter extends Application {
 	public void start(Stage stage) throws Exception {
 		createAndShowGUI(stage);
 		
+		//runs the actual interpreter
 		new Thread(() -> {
 			while (running) {
 				if (started) {
@@ -65,6 +67,7 @@ public class BrainfuckInterpreter extends Application {
 			}
 		}).start();
 		
+		//manages updates from interpreter thread to ui thread
 		new Thread(() -> {
 			while (running) {
 				try {
@@ -86,7 +89,9 @@ public class BrainfuckInterpreter extends Application {
 	}	
 	
 	private void step() {
-		if (rawIndex < raw.length) { 
+		if (rawIndex < raw.length - 1) { 
+			rawIndex++;
+			
 			char c = raw[rawIndex];
 			
 			if (c == '+') cells[index]++;
@@ -104,13 +109,12 @@ public class BrainfuckInterpreter extends Application {
 			} else if (c == ']' && !loops.isEmpty()) rawIndex = loops.pop() - 1; //must subtract one because the for loop will add one
 			else if (c == '.') outputChanges.add("" + cells[index]);
 			else if (c == ',') try {cells[index] = input[inputIndex++];} catch (Exception e) {/* do nothing */}
+			else step();
 			
 			if (index < 20) {
 				memoryIndex.add(index);
 				memoryChanges.add("" + (int)cells[index]);
 			}
-			
-			rawIndex++;
 		} else {
 			started = false;
 		}
@@ -170,9 +174,10 @@ public class BrainfuckInterpreter extends Application {
 		
 		VBox controls = new VBox(10);
 		
-		Button[] controlButtons = new Button[6];
+		Button[] controlButtons = new Button[7];
 		
 		controlButtons[0] = new Button("START");
+		controlButtons[0].setId("start-button");
 		controlButtons[0].setOnAction((ActionEvent e) -> {
 			raw = source.getText().toCharArray();
 			this.input = input.getText().toCharArray();
@@ -181,6 +186,7 @@ public class BrainfuckInterpreter extends Application {
 		});
 		
 		controlButtons[1] = new Button("STOP");
+		controlButtons[1].setId("stop-button");
 		controlButtons[1].setOnAction((ActionEvent e) -> {
 			started = false;
 		});
@@ -191,6 +197,7 @@ public class BrainfuckInterpreter extends Application {
 		});
 		
 		controlButtons[3] = new Button("RESET");
+		controlButtons[3].setId("reset-button");
 		controlButtons[3].setOnAction((ActionEvent e) -> {
 			rawIndex = 0;
 			inputIndex = 0;
@@ -220,12 +227,25 @@ public class BrainfuckInterpreter extends Application {
 			} catch (Exception e1) {
 				System.err.println("Could not load file!");
 			}
+
+			raw = source.getText().toCharArray();
+			this.input = input.getText().toCharArray();
+			for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
 		});
 		
+		controlButtons[6] = new Button("15 STEP");
+		controlButtons[6].setId("15step-button");
+		controlButtons[6].setOnAction((ActionEvent) -> {
+			for (int i = 0; i < 15; i++) step();
+		});
+		
+		int[] order = {0, 1, 2, 6, 3, 4, 5}; //order to add the buttons in
 		for (int i = 0; i < controlButtons.length; i++) {
 			controlButtons[i].setMaxWidth(Double.MAX_VALUE);
-			controls.getChildren().add(controlButtons[i]);
+			controls.getChildren().add(controlButtons[order[i]]);
 		}
+		
+		
 		
 		sourceControl.getChildren().add(controls);
 		

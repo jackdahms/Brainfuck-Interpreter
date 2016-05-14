@@ -12,3 +12,15 @@
 .text-area {
 	-fx-font-family: "Monospaced";
 }
+
+#start-button {
+	-fx-color: #93FF6B;
+}
+
+#stop-button {
+	-fx-color: #FF8585;
+}
+
+#reset-button {
+	-fx-color: #FAFF69;
+}

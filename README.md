@@ -14,7 +14,7 @@ Source - where the actual brainfuck code goes <br>
 Start - Starts or resumes the program. <br>
 Stop - Stops or pauses the program. <br>
 Step - Executes the next instruction in the program. Ignores whitespace and non-essential characters. <br>
-15 Step - Takes 15 steps.
+15 Step - Takes 15 steps. <br>
 Reset - Resets memory and output. <br>
 Save - Allows user to save current program. <br>
 Load - Allows user to load example programs or previously saved programs. <br>

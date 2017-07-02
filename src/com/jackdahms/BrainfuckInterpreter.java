@@ -26,8 +26,9 @@ import javafx.stage.WindowEvent;
 
 public class BrainfuckInterpreter extends Application {
 	
-	boolean running = true; //is the thread running
-	volatile boolean started = false; //is the interpreter running
+	boolean threadRunning = true; //is the thread running
+	volatile boolean intialized = false; //is the interpreter ready to run
+	boolean programRunning = false; //is the interpreter started
 	
 	char[] program; //the source as a char array
 	char[] input; //the input as a char array
@@ -56,11 +57,11 @@ public class BrainfuckInterpreter extends Application {
 		
 		//runs the actual interpreter
 		new Thread(() -> {
-			while (running) {
+			while (threadRunning) {
 				try {
 					Thread.sleep(1); //keeps thread from hogging cpu 
 				} catch (InterruptedException e) {/* do nothing */}
-				if (started) {
+				if (intialized && programRunning) {
 					step();
 				}
 			}
@@ -68,7 +69,7 @@ public class BrainfuckInterpreter extends Application {
 		
 		//manages updates from interpreter thread to ui thread
 		new Thread(() -> {
-			while (running) {
+			while (threadRunning) {
 				try {
 					Thread.sleep(1); //keeps thread from hogging cpu
 					Platform.runLater(() -> {
@@ -87,15 +88,18 @@ public class BrainfuckInterpreter extends Application {
 		}).start();
 	}	
 	
-	private void start() {
+	private void initialize() {
 		program = sourceArea.getText().toCharArray();
 		input = inputArea.getText().toCharArray();
-		for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
+		for (int i = 0; i < cellDisplays.length; i++) {
+			cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
+		}
+		intialized = true;
 	}
 	
 	private void step() {
-		if (!started) {
-			start();
+		if (!intialized) {
+			initialize();
 		}
 		if (stepIndex < program.length - 1) { 
 			stepIndex++;
@@ -134,7 +138,7 @@ public class BrainfuckInterpreter extends Application {
 				memoryChanges.add("" + (int)cells[memoryIndex]);
 			}
 		} else {
-			started = false;
+			programRunning = false;
 		}
 	}
 	
@@ -149,6 +153,7 @@ public class BrainfuckInterpreter extends Application {
 			cells[i] = 0;
 		}
 		outputArea.setText("");
+		intialized = false;
 	}
 	
 	private void createAndShowGUI(Stage stage) {
@@ -156,7 +161,7 @@ public class BrainfuckInterpreter extends Application {
 		
 		stage.setTitle("Brainfuck Interpreter");
 		stage.setOnCloseRequest((WindowEvent e) -> {
-			running = false;
+			threadRunning = false;
 			stage.close();
 		});
         
@@ -205,20 +210,20 @@ public class BrainfuckInterpreter extends Application {
 		
 		VBox controls = new VBox(10);
 		
-		Button[] controlButtons = new Button[7];
+		Button[] controlButtons = new Button[8];
 		
 		controlButtons[0] = new Button("START");
 		controlButtons[0].setId("start-button");
 		controlButtons[0].setOnAction((ActionEvent e) -> {
 			reset();
-			start();
-			started = true;
+			initialize();
+			programRunning = true;
 		});
 		
 		controlButtons[1] = new Button("STOP");
 		controlButtons[1].setId("stop-button");
 		controlButtons[1].setOnAction((ActionEvent e) -> {
-			started = false;
+			programRunning = false;
 		});
 		
 		controlButtons[2] = new Button("STEP");
@@ -226,18 +231,11 @@ public class BrainfuckInterpreter extends Application {
 			step();
 		});
 		
-		controlButtons[6] = new Button("15 STEP");
-		controlButtons[6].setId("15step-button");
-		controlButtons[6].setOnAction((ActionEvent) -> {
-			for (int i = 0; i < 15; i++) {
-				step();
-			}
-		});
-		
 		controlButtons[3] = new Button("RESET");
 		controlButtons[3].setId("reset-button");
 		controlButtons[3].setOnAction((ActionEvent e) -> {
 			reset();
+			programRunning = false;
 		});
 		
 		controlButtons[4] = new Button("SAVE");
@@ -274,7 +272,22 @@ public class BrainfuckInterpreter extends Application {
 			for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
 		});
 		
-		int[] order = {0, 1, 2, 6, 3, 4, 5}; //order to add the buttons in
+		controlButtons[6] = new Button("15 STEP");
+		controlButtons[6].setId("15step-button");
+		controlButtons[6].setOnAction((ActionEvent) -> {
+			for (int i = 0; i < 15; i++) {
+				step();
+			}
+		});
+		
+		controlButtons[7] = new Button("RESUME");
+		controlButtons[7].setOnAction((ActionEvent) -> {
+			if (intialized) {
+				programRunning = true;
+			}
+		});
+		
+		int[] order = {0, 1, 7, 2, 6, 3, 4, 5}; //order to add the buttons in
 		for (int i = 0; i < controlButtons.length; i++) {
 			controlButtons[i].setMaxWidth(Double.MAX_VALUE);
 			controls.getChildren().add(controlButtons[order[i]]);

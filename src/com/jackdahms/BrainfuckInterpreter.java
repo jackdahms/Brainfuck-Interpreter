@@ -26,8 +26,10 @@ import javafx.stage.WindowEvent;
 
 public class BrainfuckInterpreter extends Application {
 				
+	//TODO java won't respond after cmd+q
+	
 	boolean running = true; //is the thread running
-	boolean started = false; //is the interpreter running
+	volatile boolean started = false; //is the interpreter running
 	
 	char[] raw; //the source as a char array
 	char[] input; //the input as a char array
@@ -35,12 +37,12 @@ public class BrainfuckInterpreter extends Application {
 	
 	Stack<Integer> loops = new Stack<Integer>(); //keeps track of open/close bracket pairs
 	LinkedList<String> outputChanges = new LinkedList<String>(); //queue of output
-	LinkedList<Integer> memoryIndex = new LinkedList<Integer>(); //queue of displayed memory indices to be updated
+	LinkedList<Integer> memoryIndices = new LinkedList<Integer>(); //queue of displayed memory indices to be updated
 	LinkedList<String> memoryChanges = new LinkedList<String>(); //queue of updates to displayed memory
 	
-	int rawIndex = -1; //the pointer for the source, starts at -1 because it increments before every step
+	int stepIndex = -1; //the pointer for the source, starts at -1 because it increments before every step
 	int inputIndex = 0; //the pointer for the input
-	int index = 0; //the pointer for the memory cells
+	int memoryIndex = 0; //the pointer for the memory cells
 	
 	TextField[] cellDisplays; //where the value of the first 20 cells will be displayed;
 	TextArea output; //where the output will be printed
@@ -49,7 +51,7 @@ public class BrainfuckInterpreter extends Application {
 		launch(args);
 	}
 	
-	public void start(Stage stage) throws Exception {
+	public void start(Stage stage) {
 		createAndShowGUI(stage);
 		
 		//runs the actual interpreter
@@ -68,7 +70,7 @@ public class BrainfuckInterpreter extends Application {
 					Thread.sleep(1); //keeps thread from hogging cpu
 					Platform.runLater(() -> {
 						try {
-							cellDisplays[memoryIndex.remove()].setText(memoryChanges.remove());
+							cellDisplays[memoryIndices.remove()].setText(memoryChanges.remove());
 						} catch (Exception e) {/*do nothing*/}
 						//must use separate tries because one failing cannot affect the other
 						try {
@@ -82,36 +84,61 @@ public class BrainfuckInterpreter extends Application {
 		}).start();
 	}	
 	
+	
+	
 	private void step() {
-		if (rawIndex < raw.length - 1) { 
-			rawIndex++;
+		if (stepIndex < raw.length - 1) { 
+			stepIndex++;
 			
-			char c = raw[rawIndex];
+			char c = raw[stepIndex];
 			
-			if (c == '+') cells[index]++;
-			else if (c == '-') cells[index]--;
-			else if (c == '>') index++;
-			else if (c == '<') index--;
-			else if (c == '[' && cells[index] > 0) loops.push(rawIndex);
-			else if (c == '[' && cells[index] == 0) {
+			if (c == '+') {
+				cells[memoryIndex]++;
+			} else if (c == '-') {
+				cells[memoryIndex]--;
+			} else if (c == '>') {
+				memoryIndex++;
+			} else if (c == '<') {
+				memoryIndex--;
+			} else if (c == '[' && cells[memoryIndex] > 0) {
+				loops.push(stepIndex);
+			} else if (c == '[' && cells[memoryIndex] == 0) {
 				int open = 1; //count number of open brackets
 				do { 
-					rawIndex++; 
-					if (raw[rawIndex] == '[') open++; //increment for every open bracket
-					else if (raw[rawIndex] == ']') open--; //decrement for every close bracket
-				} while(raw[rawIndex] != ']' || open > 0); 
-			} else if (c == ']' && !loops.isEmpty()) rawIndex = loops.pop() - 1; //must subtract one because the for loop will add one
-			else if (c == '.') outputChanges.add("" + cells[index]);
-			else if (c == ',') try {cells[index] = input[inputIndex++];} catch (Exception e) {/* do nothing */}
-			else step();
+					stepIndex++; 
+					if (raw[stepIndex] == '[') open++; //increment for every open bracket
+					else if (raw[stepIndex] == ']') open--; //decrement for every close bracket
+				} while(raw[stepIndex] != ']' || open > 0); 
+			} else if (c == ']' && !loops.isEmpty()) {
+				stepIndex = loops.pop() - 1; //must subtract one because the for loop will add one
+			} else if (c == '.') {
+				outputChanges.add("" + cells[memoryIndex]);
+			} else if (c == ',') {
+				try {cells[memoryIndex] = input[inputIndex++];} catch (Exception e) {/* do nothing */}
+			} else {
+				step();
+			}
 			
-			if (index < 20) {
-				memoryIndex.add(index);
-				memoryChanges.add("" + (int)cells[index]);
+			if (memoryIndex < 20) {
+				memoryIndices.add(memoryIndex);
+				memoryChanges.add("" + (int)cells[memoryIndex]);
 			}
 		} else {
 			started = false;
 		}
+	}
+	
+	private void reset() {
+		stepIndex = -1;
+		inputIndex = 0;
+		memoryIndex = 0;
+		for (int i = 0; i < cellDisplays.length; i++) {
+			cellDisplays[i].setText("0");
+		}
+		for (int i = 0; i < cells.length; i++) {
+			cells[i] = 0;
+		}
+		output.setText("");
 	}
 	
 	private void createAndShowGUI(Stage stage) {
@@ -173,6 +200,7 @@ public class BrainfuckInterpreter extends Application {
 		controlButtons[0] = new Button("START");
 		controlButtons[0].setId("start-button");
 		controlButtons[0].setOnAction((ActionEvent e) -> {
+			reset();
 			raw = source.getText().toCharArray();
 			this.input = input.getText().toCharArray();
 			for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
@@ -190,15 +218,18 @@ public class BrainfuckInterpreter extends Application {
 			step();
 		});
 		
+		controlButtons[6] = new Button("15 STEP");
+		controlButtons[6].setId("15step-button");
+		controlButtons[6].setOnAction((ActionEvent) -> {
+			for (int i = 0; i < 15; i++) {
+				step();
+			}
+		});
+		
 		controlButtons[3] = new Button("RESET");
 		controlButtons[3].setId("reset-button");
 		controlButtons[3].setOnAction((ActionEvent e) -> {
-			rawIndex = 0;
-			inputIndex = 0;
-			index = 0;
-			for (int i = 0; i < cellDisplays.length; i++) cellDisplays[i].setText("0");
-			for (int i = 0; i < cells.length; i++) cells[i] = 0;
-			output.setText("");
+			reset();
 		});
 		
 		controlButtons[4] = new Button("SAVE");
@@ -233,12 +264,6 @@ public class BrainfuckInterpreter extends Application {
 			raw = source.getText().toCharArray();
 			this.input = input.getText().toCharArray();
 			for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
-		});
-		
-		controlButtons[6] = new Button("15 STEP");
-		controlButtons[6].setId("15step-button");
-		controlButtons[6].setOnAction((ActionEvent) -> {
-			for (int i = 0; i < 15; i++) step();
 		});
 		
 		int[] order = {0, 1, 2, 6, 3, 4, 5}; //order to add the buttons in

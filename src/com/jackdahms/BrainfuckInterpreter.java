@@ -25,13 +25,11 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 public class BrainfuckInterpreter extends Application {
-				
-	//TODO java won't respond after cmd+q
 	
 	boolean running = true; //is the thread running
 	volatile boolean started = false; //is the interpreter running
 	
-	char[] raw; //the source as a char array
+	char[] program; //the source as a char array
 	char[] input; //the input as a char array
 	char[] cells = new char[30000]; //the memory of brainfuck, standard size of 30,000 as per wikipedia
 	
@@ -45,7 +43,9 @@ public class BrainfuckInterpreter extends Application {
 	int memoryIndex = 0; //the pointer for the memory cells
 	
 	TextField[] cellDisplays; //where the value of the first 20 cells will be displayed;
-	TextArea output; //where the output will be printed
+	TextArea sourceArea; //where the program is typed
+	TextArea inputArea; //where the input is typed
+	TextArea outputArea; //where the output will be printed
 	
 	public static void main(String[] args) {
 		launch(args);
@@ -57,6 +57,9 @@ public class BrainfuckInterpreter extends Application {
 		//runs the actual interpreter
 		new Thread(() -> {
 			while (running) {
+				try {
+					Thread.sleep(1); //keeps thread from hogging cpu 
+				} catch (InterruptedException e) {/* do nothing */}
 				if (started) {
 					step();
 				}
@@ -74,23 +77,30 @@ public class BrainfuckInterpreter extends Application {
 						} catch (Exception e) {/*do nothing*/}
 						//must use separate tries because one failing cannot affect the other
 						try {
-							output.setText(output.getText() + outputChanges.remove());
+							outputArea.setText(outputArea.getText() + outputChanges.remove());
 						} catch (Exception e) {/*do nothing*/}
 					});
 				} catch (Exception e) {
-					//do nothing
+					e.printStackTrace();
 				}
 			}
 		}).start();
 	}	
 	
-	
+	private void start() {
+		program = sourceArea.getText().toCharArray();
+		input = inputArea.getText().toCharArray();
+		for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
+	}
 	
 	private void step() {
-		if (stepIndex < raw.length - 1) { 
+		if (!started) {
+			start();
+		}
+		if (stepIndex < program.length - 1) { 
 			stepIndex++;
 			
-			char c = raw[stepIndex];
+			char c = program[stepIndex];
 			
 			if (c == '+') {
 				cells[memoryIndex]++;
@@ -106,9 +116,9 @@ public class BrainfuckInterpreter extends Application {
 				int open = 1; //count number of open brackets
 				do { 
 					stepIndex++; 
-					if (raw[stepIndex] == '[') open++; //increment for every open bracket
-					else if (raw[stepIndex] == ']') open--; //decrement for every close bracket
-				} while(raw[stepIndex] != ']' || open > 0); 
+					if (program[stepIndex] == '[') open++; //increment for every open bracket
+					else if (program[stepIndex] == ']') open--; //decrement for every close bracket
+				} while(program[stepIndex] != ']' || open > 0); 
 			} else if (c == ']' && !loops.isEmpty()) {
 				stepIndex = loops.pop() - 1; //must subtract one because the for loop will add one
 			} else if (c == '.') {
@@ -138,7 +148,7 @@ public class BrainfuckInterpreter extends Application {
 		for (int i = 0; i < cells.length; i++) {
 			cells[i] = 0;
 		}
-		output.setText("");
+		outputArea.setText("");
 	}
 	
 	private void createAndShowGUI(Stage stage) {
@@ -160,17 +170,17 @@ public class BrainfuckInterpreter extends Application {
 		GridPane.setHgrow(inputLabel, Priority.ALWAYS);
 		grid.add(inputLabel, 0, 0);
 		
-		TextArea input = new TextArea();
-		input.setMinHeight(ioHeight);
-		grid.add(input, 0, 1);
+		inputArea = new TextArea();
+		inputArea.setMinHeight(ioHeight);
+		grid.add(inputArea, 0, 1);
 		
 		Label outputLabel = new Label("OUTPUT");
 		GridPane.setHgrow(outputLabel, Priority.ALWAYS);
 		grid.add(outputLabel, 1, 0);
 		
-		output = new TextArea();
-		output.setMinHeight(ioHeight);
-		grid.add(output, 1, 1);
+		outputArea = new TextArea();
+		outputArea.setMinHeight(ioHeight);
+		grid.add(outputArea, 1, 1);
 		
 		Label memoryLabel = new Label("MEMORY");
 		grid.add(memoryLabel, 0, 2);
@@ -188,10 +198,10 @@ public class BrainfuckInterpreter extends Application {
 		
 		HBox sourceControl = new HBox(10);
 		
-		TextArea source = new TextArea();
-		source.setPrefHeight(10000); //just has to be big enough to reach the bottom of the stage
-		HBox.setHgrow(source, Priority.ALWAYS);
-		sourceControl.getChildren().add(source);
+		sourceArea = new TextArea();
+		sourceArea.setPrefHeight(10000); //just has to be big enough to reach the bottom of the stage
+		HBox.setHgrow(sourceArea, Priority.ALWAYS);
+		sourceControl.getChildren().add(sourceArea);
 		
 		VBox controls = new VBox(10);
 		
@@ -201,9 +211,7 @@ public class BrainfuckInterpreter extends Application {
 		controlButtons[0].setId("start-button");
 		controlButtons[0].setOnAction((ActionEvent e) -> {
 			reset();
-			raw = source.getText().toCharArray();
-			this.input = input.getText().toCharArray();
-			for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
+			start();
 			started = true;
 		});
 		
@@ -240,7 +248,7 @@ public class BrainfuckInterpreter extends Application {
 			File save = fileChooser.showSaveDialog(stage);
 			try {
 	            FileWriter fileWriter = new FileWriter(save);
-	            fileWriter.write(source.getText());
+	            fileWriter.write(sourceArea.getText());
 	            fileWriter.close();
 	        } catch (Exception ex) {
 	        	System.err.println("Could not save file!");
@@ -255,14 +263,14 @@ public class BrainfuckInterpreter extends Application {
 			try {
 				Scanner load = new Scanner(fileChooser.showOpenDialog(stage));
 				load.useDelimiter("\\Z");
-				source.setText(load.next());
+				sourceArea.setText(load.next());
 				load.close();
 			} catch (Exception e1) {
 				System.err.println("Could not load file!");
 			}
 
-			raw = source.getText().toCharArray();
-			this.input = input.getText().toCharArray();
+			program = sourceArea.getText().toCharArray();
+			this.input = inputArea.getText().toCharArray();
 			for (int i = 0; i < cellDisplays.length; i++) cells[i] = (char)Integer.parseInt(cellDisplays[i].getText());
 		});
 		
